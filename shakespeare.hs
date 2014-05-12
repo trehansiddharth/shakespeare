@@ -1,4 +1,6 @@
-module WhatWouldISay where
+{-# LANGUAGE OverloadedStrings #-}
+
+module Shakespeare where
 	import Prelude hiding (id, (.))
 	import Probabilities
 	import Probabilities.Markov
@@ -9,6 +11,8 @@ module WhatWouldISay where
 	import Control.Monad.Trans.State.Lazy
 	import Control.Monad.Identity
 	import Control.Category
+	import qualified Data.ByteString as BS
+	import qualified Data.ByteString.Internal as BS (c2w, w2c)
 
 	firstTwo :: [a] -> Maybe (a, a)
 	firstTwo [] = Nothing
