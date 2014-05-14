@@ -97,6 +97,11 @@ module Probabilities where
 			icmf (x:xs) y	| y > pmf x	= icmf xs (y - (pmf x))
 							| otherwise	= x
 
+	normalize :: [(a, Float)] -> [(a, Float)]
+	normalize dict = map (\(x, p) -> (x, p / total)) dict
+		where
+			total = sum . map snd $ dict
+
 	uniform :: (RandomGen r, Random a, Monad m) => a -> a -> DistributionT r m a
 	uniform a b = Distribution $ return . fst . randomR (a, b)
 

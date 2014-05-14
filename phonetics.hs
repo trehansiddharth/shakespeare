@@ -1,6 +1,7 @@
 {-# LANGUAGE OverloadedStrings, DeriveFunctor #-}
 
 module Phonetics where
+	import Data.Char
 	import qualified Data.ByteString as BS
 	import System.Random
 	import Control.Monad
@@ -26,15 +27,19 @@ module Phonetics where
 
 	findEntry :: BST Entry -> BS.ByteString -> Maybe Entry
 	findEntry Empty x = Nothing
-	findEntry (Tree l y r) x	| x < word y	= findEntry l x
-								| x > word y	= findEntry r x
-								| x == word y	= Just y
+	findEntry (Tree l y r) x = guard (x /= "") >> guard (word y /= "") >> tryFind
+			where
+				tryFind	| x < word y	= findEntry l x
+						| x > word y	= findEntry r x
+						| x == word y	= Just y
 
 	rhymeCoefficient :: BST Entry -> BS.ByteString -> BS.ByteString -> Maybe Float
 	rhymeCoefficient bst w1 w2 = do
-		e1 <- findEntry bst w1
-		e2 <- findEntry bst w2
+		e1 <- findEntry bst $ uppercase w1
+		e2 <- findEntry bst $ uppercase w2
 		return $ endings (phonetic e1) (phonetic e2)
+
+	uppercase = BS.pack . map BS.c2w . map toUpper . map BS.w2c . BS.unpack
 	
 	endings ps qs = sum $ takeWhile (> 0.0) $ zipWith match (reverse ps) (reverse qs)
 	match (Phoneme x m) (Phoneme y n) = if x == y
@@ -46,7 +51,7 @@ module Phonetics where
 	getEntries = do
 		dictionary <- BS.readFile "cmudict.0.7a.txt"
 		entries <- shuffle $ BS.split (BS.c2w '\n') dictionary
-		let bst = fmap parseword . foldl insert Empty $ entries
+		let bst = fmap parseword . foldl insert Empty . filter (/= "") $ entries
 		return bst
 
 	parseword entry = Entry w p
