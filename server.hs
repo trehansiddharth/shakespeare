@@ -12,8 +12,4 @@ module Server where
 	runServer :: IO ()
 	runServer = do
 		pClients <- bind 8000
-		forever $ do
-			pClient <- pull pClients
-			msg <- pull pClient
-			BS.putStrLn msg
-			push pClient "<h1>Hello!</h1>"
+		runShakespeare Nothing pClients 2 10

@@ -115,7 +115,7 @@ module Shakespeare where
 	say :: RandomGen r => Int -> StateT (Markov r [BS.ByteString], [BS.ByteString]) (Distribution r) BS.ByteString
 	say 0 = do
 		poem <- gets snd
-		return . BS.concat . intersperse "\n" . map BS.tail $ poem
+		return . BS.concat . intersperse "\n" . (++ [""]) . map BS.tail $ poem
 	say lineLength = do
 		words <- with onlyFst collapseState
 		poem <- gets snd

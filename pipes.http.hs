@@ -20,10 +20,23 @@ module Pipes.Http where
 			push pipe (invert ps)
 	
 	portHandler h pipe = do
-		d <- hGetLine h
-		push pipe (s2b d)
+		d <- getData 0 h
+		push pipe d
 		resp <- pull pipe
 		(hPutStr h . write_msg . b2s) resp
+	
+	getData i h = do
+		d <- hGetLine h
+		d2 <- if d == ""
+			then replicateM i (hGetChar h) >>= return . s2b
+			else do
+				let params = words d
+				if params == []
+					then replicateM i (hGetChar h) >>= return . s2b
+					else if head params == "Content-Length:"
+						then getData (read (params !! 1)) h
+						else getData i h
+		return d2
 	
 	write_msg msg = concat [bare_headers, "\r\nContent-Length: ", (show . length) msg, "\r\n\r\n", msg, "\r\n"]
 	
