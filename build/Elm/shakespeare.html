@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html><head><meta charset="UTF-8"><title>shakespeare</title><script type="text/javascript" src="/home/siddharth/.cabal/share/Elm-0.12.2/elm-runtime.js"></script><script type="text/javascript">Elm.Main = Elm.Main || {};
+Elm.Main.make = function (_elm) {
+   "use strict";
+   _elm.Main = _elm.Main || {};
+   if (_elm.Main.values)
+   return _elm.Main.values;
+   var _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   _A = _N.Array.make(_elm),
+   _E = _N.Error.make(_elm),
+   $moduleName = "Main";
+   var Basics = Elm.Basics.make(_elm);
+   var Color = Elm.Color.make(_elm);
+   var Graphics = Graphics || {};
+   Graphics.Collage = Elm.Graphics.Collage.make(_elm);
+   var Graphics = Graphics || {};
+   Graphics.Element = Elm.Graphics.Element.make(_elm);
+   var Graphics = Graphics || {};
+   Graphics.Input = Elm.Graphics.Input.make(_elm);
+   var Graphics = Graphics || {};
+   Graphics.Input = Graphics.Input || {};
+   Graphics.Input.Field = Elm.Graphics.Input.Field.make(_elm);
+   var Http = Elm.Http.make(_elm);
+   var List = Elm.List.make(_elm);
+   var Maybe = Elm.Maybe.make(_elm);
+   var Native = Native || {};
+   Native.Json = Elm.Native.Json.make(_elm);
+   var Native = Native || {};
+   Native.Ports = Elm.Native.Ports.make(_elm);
+   var Signal = Elm.Signal.make(_elm);
+   var String = Elm.String.make(_elm);
+   var Text = Elm.Text.make(_elm);
+   var Time = Elm.Time.make(_elm);
+   var _op = {};
+   var $return = function (x) {
+      return Graphics.Input.input(x).signal;
+   };
+   var signals = function (s) {
+      return function () {
+         switch (s.ctor)
+         {case "::":
+            return A2(Signal._op["~"],
+              A2(Signal._op["<~"],
+              F2(function (x,y) {
+                 return {ctor: "::"
+                        ,_0: x
+                        ,_1: y};
+              }),
+              s._0),
+              signals(s._1));
+            case "[]":
+            return $return(_L.fromArray([]));}
+         _E.Case($moduleName,
+         "between lines 28 and 30");
+      }();
+   };
+   var processResponse = function (response) {
+      return function () {
+         switch (response.ctor)
+         {case "Failure":
+            return _L.append("Fail: ",
+              response._1);
+            case "Success":
+            return response._0;
+            case "Waiting": return "";}
+         _E.Case($moduleName,
+         "between lines 16 and 19");
+      }();
+   };
+   var poem = Graphics.Input.input(Graphics.Input.Field.noContent);
+   var poemBox = A2(Signal._op["<~"],
+   A4(Graphics.Input.Field.field,
+   _U.insert("padding",
+   Graphics.Input.Field.uniformly(4),
+   _U.remove("padding",
+   Graphics.Input.Field.defaultStyle)),
+   poem.handle,
+   Basics.id,
+   "Poem"),
+   poem.signal);
+   var submit = Graphics.Input.input("");
+   var submitButton = A2(Signal._op["<~"],
+   function (text) {
+      return A3(Graphics.Input.button,
+      submit.handle,
+      text.string,
+      "Make Me A Poem");
+   },
+   poem.signal);
+   var outputBox = A2(Signal._op["<~"],
+   Text.leftAligned,
+   A2(Signal._op["<~"],
+   Text.toText,
+   A2(Signal._op["<~"],
+   processResponse,
+   Http.send(A2(Signal._op["<~"],
+   Http.post("/"),
+   submit.signal)))));
+   var main = A2(Signal._op["<~"],
+   Graphics.Element.flow(Graphics.Element.down),
+   signals(_L.fromArray([poemBox
+                        ,submitButton
+                        ,outputBox])));
+   _elm.Main.values = {_op: _op
+                      ,submit: submit
+                      ,submitButton: submitButton
+                      ,poem: poem
+                      ,poemBox: poemBox
+                      ,outputBox: outputBox
+                      ,processResponse: processResponse
+                      ,main: main
+                      ,$return: $return
+                      ,signals: signals};
+   return _elm.Main.values;
+};</script></head><body><script type="text/javascript">Elm.fullscreen(Elm.Main)</script><noscript></noscript></body></html>

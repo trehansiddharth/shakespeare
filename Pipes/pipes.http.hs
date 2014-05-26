@@ -1,6 +1,8 @@
+{-# LANGUAGE DatatypeContexts #-}
+
 module Pipes.Http where
 	import Network
-	import Network.HTTP
+	import Network.HTTP hiding (GET, POST, Request)
 	import System.IO.Strict (hGetContents)
 	import System.IO hiding (hGetContents)
 	import Control.Monad
@@ -8,7 +10,13 @@ module Pipes.Http where
 	import qualified Data.ByteString as BS
 	import qualified Data.ByteString.Internal as BS (c2w, w2c)
 
-	bind :: PortNumber -> IO (Pipe (Pipe BS.ByteString BS.ByteString) a)
+	data (Eq a, Show a, Read a) => Request a = GET String | POST String a
+		deriving (Eq, Show, Read)
+
+	getUrl (GET u) = u
+	getUrl (POST u l) = u
+
+	bind :: PortNumber -> IO (Pipe (Pipe (Request BS.ByteString) BS.ByteString) a)
 	bind site = spawn (bindSocket (PortNumber site)) >>= return . invert
 
 	bindSocket site pipe = do
@@ -20,11 +28,16 @@ module Pipes.Http where
 			push pipe (invert ps)
 	
 	portHandler h pipe = do
-		d <- getData 0 h
+		top <- hGetLine h >>= return . words
+		let protocol = head top
+		let url = (!! 1) $ top
+		load <- getData 0 h
+		let d = if protocol == "POST" then POST url load else GET url
+		print d
 		push pipe d
 		resp <- pull pipe
 		(hPutStr h . write_msg . b2s) resp
-	
+
 	getData i h = do
 		d <- hGetLine h
 		d2 <- if d == ""

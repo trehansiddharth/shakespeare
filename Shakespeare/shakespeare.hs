@@ -40,21 +40,16 @@ module Shakespeare where
 	bsconcat :: BS.ByteString -> BS.ByteString -> BS.ByteString
 	bsconcat x y = BS.concat [x, y]
 
-	runShakespeare :: Maybe (BST Entry) -> Pipe (Pipe BS.ByteString BS.ByteString) a -> Int -> Int -> IO ()
-	runShakespeare maybeBst interface numRhymes lineLength = do
+	runShakespeare :: Either String (BST Entry) -> BS.ByteString -> Int -> Int -> IO BS.ByteString
+	runShakespeare eitherBst corpus numRhymes lineLength = do
 		g <- newStdGen
-		bst <- case maybeBst of
-			Nothing -> getEntries
-			Just x -> return x
-		pipe <- pull interface
-		corpus <- pull pipe
+		bst <- case eitherBst of
+			Left path -> getEntries path
+			Right rBst -> return rBst
 		let vocabulary = concat . map (BS.split (BS.c2w ' '))
 			. concat . map (BS.split (BS.c2w '\r'))
 			. BS.split (BS.c2w '\n') $ corpus
-		forkIO $ do
-			let poem = runDist (evalStateT (shakespeare bst numRhymes lineLength) vocabulary) g
-			push pipe poem
-		runShakespeare (Just bst) interface numRhymes lineLength
+		return $ runDist (evalStateT (shakespeare bst numRhymes lineLength) vocabulary) g
 
 	shakespeare :: RandomGen r => BST Entry -> Int -> Int -> StateT [BS.ByteString] (Distribution r) BS.ByteString
 	shakespeare bst numRhymes lineLength = do

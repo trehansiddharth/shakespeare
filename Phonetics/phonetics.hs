@@ -48,8 +48,8 @@ module Phonetics where
 			_ -> 1.0
 		else 0.0
 
-	getEntries = do
-		dictionary <- BS.readFile "cmudict.0.7a.txt"
+	getEntries dictFile = do
+		dictionary <- BS.readFile dictFile
 		entries <- shuffle $ BS.split (BS.c2w '\n') dictionary
 		let bst = fmap parseword . foldl insert Empty . filter (/= "") $ entries
 		return bst
