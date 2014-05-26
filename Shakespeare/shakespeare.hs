@@ -21,6 +21,7 @@ module Shakespeare where
 	import Control.Concurrent
 	import Control.Concurrent.MVar
 	import Pipes
+	import Data.Char
 
 	firstTwo :: [a] -> Maybe (a, a)
 	firstTwo [] = Nothing
@@ -40,6 +41,12 @@ module Shakespeare where
 	bsconcat :: BS.ByteString -> BS.ByteString -> BS.ByteString
 	bsconcat x y = BS.concat [x, y]
 
+	alphanumeric = (flip elem) (map BS.c2w ([' '] ++ ['a' .. 'z'] ++ ['A' .. 'Z'] ++ ['0' .. '9']))
+
+	capitalize s = case BS.uncons s of
+		Nothing -> s
+		Just (c, rest) -> BS.cons (BS.c2w . toUpper . BS.w2c $ c) (lowercase rest)
+
 	runShakespeare :: Either String (BST Entry) -> BS.ByteString -> Int -> Int -> IO BS.ByteString
 	runShakespeare eitherBst corpus numRhymes lineLength = do
 		g <- newStdGen
@@ -48,7 +55,8 @@ module Shakespeare where
 			Right rBst -> return rBst
 		let vocabulary = concat . map (BS.split (BS.c2w ' '))
 			. concat . map (BS.split (BS.c2w '\r'))
-			. BS.split (BS.c2w '\n') $ corpus
+			. BS.split (BS.c2w '\n')
+			. BS.filter alphanumeric $ corpus
 		return $ runDist (evalStateT (shakespeare bst numRhymes lineLength) vocabulary) g
 
 	shakespeare :: RandomGen r => BST Entry -> Int -> Int -> StateT [BS.ByteString] (Distribution r) BS.ByteString
@@ -110,7 +118,7 @@ module Shakespeare where
 	say :: RandomGen r => Int -> StateT (Markov r [BS.ByteString], [BS.ByteString]) (Distribution r) BS.ByteString
 	say 0 = do
 		poem <- gets snd
-		return . BS.concat . intersperse "\n" . (++ [""]) . map BS.tail $ poem
+		return . BS.concat . (++ [".\n"]) . intersperse ",\n" . map capitalize . map BS.tail $ poem
 	say lineLength = do
 		words <- with onlyFst collapseState
 		poem <- gets snd

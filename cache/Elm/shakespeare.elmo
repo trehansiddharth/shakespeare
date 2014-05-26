@@ -32,6 +32,7 @@ Elm.Main.make = function (_elm) {
    var String = Elm.String.make(_elm);
    var Text = Elm.Text.make(_elm);
    var Time = Elm.Time.make(_elm);
+   var Window = Elm.Window.make(_elm);
    var _op = {};
    var $return = function (x) {
       return Graphics.Input.input(x).signal;
@@ -52,9 +53,27 @@ Elm.Main.make = function (_elm) {
             case "[]":
             return $return(_L.fromArray([]));}
          _E.Case($moduleName,
-         "between lines 28 and 30");
+         "between lines 49 and 51");
       }();
    };
+   var poemHeight = 120;
+   var poemWidth = 500;
+   var display = F2(function (_v3,
+   f) {
+      return function () {
+         switch (_v3.ctor)
+         {case "_Tuple2":
+            return Graphics.Element.color(Color.lightOrange)(A3(Graphics.Element.container,
+              _v3._0,
+              _v3._1,
+              Graphics.Element.middle)(Graphics.Element.color(Color.lightPurple)(A3(Graphics.Element.container,
+              poemWidth,
+              poemHeight + 190,
+              Graphics.Element.middle)(f))));}
+         _E.Case($moduleName,
+         "on line 31, column 20 to 136");
+      }();
+   });
    var processResponse = function (response) {
       return function () {
          switch (response.ctor)
@@ -65,19 +84,16 @@ Elm.Main.make = function (_elm) {
             return response._0;
             case "Waiting": return "";}
          _E.Case($moduleName,
-         "between lines 16 and 19");
+         "between lines 21 and 24");
       }();
    };
    var poem = Graphics.Input.input(Graphics.Input.Field.noContent);
    var poemBox = A2(Signal._op["<~"],
    A4(Graphics.Input.Field.field,
-   _U.insert("padding",
-   Graphics.Input.Field.uniformly(4),
-   _U.remove("padding",
-   Graphics.Input.Field.defaultStyle)),
+   Graphics.Input.Field.defaultStyle,
    poem.handle,
    Basics.id,
-   "Poem"),
+   "Input Text"),
    poem.signal);
    var submit = Graphics.Input.input("");
    var submitButton = A2(Signal._op["<~"],
@@ -85,11 +101,11 @@ Elm.Main.make = function (_elm) {
       return A3(Graphics.Input.button,
       submit.handle,
       text.string,
-      "Make Me A Poem");
+      "Poemify");
    },
    poem.signal);
    var outputBox = A2(Signal._op["<~"],
-   Text.leftAligned,
+   Text.centered,
    A2(Signal._op["<~"],
    Text.toText,
    A2(Signal._op["<~"],
@@ -97,19 +113,89 @@ Elm.Main.make = function (_elm) {
    Http.send(A2(Signal._op["<~"],
    Http.post("/"),
    submit.signal)))));
-   var main = A2(Signal._op["<~"],
+   var controls = A2(Signal._op["<~"],
    Graphics.Element.flow(Graphics.Element.down),
-   signals(_L.fromArray([poemBox
-                        ,submitButton
-                        ,outputBox])));
+   signals(_L.fromArray([A2(Signal._op["<~"],
+                        A3(Graphics.Element.container,
+                        poemWidth,
+                        40,
+                        Graphics.Element.middle),
+                        poemBox)
+                        ,A2(Signal._op["<~"],
+                        A3(Graphics.Element.container,
+                        poemWidth,
+                        50,
+                        Graphics.Element.middle),
+                        submitButton)
+                        ,A2(Signal._op["<~"],
+                        A3(Graphics.Element.container,
+                        poemWidth,
+                        poemHeight,
+                        Graphics.Element.middle),
+                        outputBox)])));
+   var subtitle = Text.centered(Text.height(22)(Text.toText("Turn Your Text Into A Poem")));
+   var title = Text.centered(Text.height(32)(Text.toText("Shakespeare")));
+   var header = A2(Graphics.Element.flow,
+   Graphics.Element.down,
+   _L.fromArray([A4(Graphics.Element.container,
+                poemWidth,
+                45,
+                Graphics.Element.middle,
+                title)
+                ,A4(Graphics.Element.container,
+                poemWidth,
+                45,
+                Graphics.Element.middle,
+                subtitle)]));
+   var form = F2(function (_v11,
+   fc) {
+      return function () {
+         switch (_v11.ctor)
+         {case "_Tuple2":
+            return _L.fromArray([A4(Graphics.Element.container,
+                                poemWidth,
+                                90,
+                                Graphics.Element.middle,
+                                header)
+                                ,A2(Graphics.Element.spacer,
+                                10,
+                                10)
+                                ,A4(Graphics.Element.container,
+                                poemWidth,
+                                poemHeight + 90,
+                                Graphics.Element.middle,
+                                fc)]);}
+         _E.Case($moduleName,
+         "between lines 33 and 36");
+      }();
+   });
+   var main = A2(Signal._op["~"],
+   A2(Signal._op["<~"],
+   display,
+   Window.dimensions),
+   A2(Signal._op["<~"],
+   Graphics.Element.flow(Graphics.Element.down),
+   A2(Signal._op["~"],
+   A2(Signal._op["<~"],
+   form,
+   Window.dimensions),
+   controls)));
    _elm.Main.values = {_op: _op
+                      ,title: title
+                      ,subtitle: subtitle
                       ,submit: submit
                       ,submitButton: submitButton
                       ,poem: poem
                       ,poemBox: poemBox
                       ,outputBox: outputBox
                       ,processResponse: processResponse
+                      ,poemWidth: poemWidth
+                      ,poemHeight: poemHeight
                       ,main: main
+                      ,display: display
+                      ,form: form
+                      ,header: header
+                      ,controls: controls
                       ,$return: $return
                       ,signals: signals};
    return _elm.Main.values;

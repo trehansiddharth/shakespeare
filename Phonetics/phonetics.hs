@@ -39,7 +39,8 @@ module Phonetics where
 		e2 <- findEntry bst $ uppercase w2
 		return $ endings (phonetic e1) (phonetic e2)
 
-	uppercase = BS.pack . map BS.c2w . map toUpper . map BS.w2c . BS.unpack
+	uppercase = BS.map (BS.c2w . toUpper . BS.w2c)
+	lowercase = BS.map (BS.c2w . toLower . BS.w2c)
 	
 	endings ps qs = sum $ takeWhile (> 0.0) $ zipWith match (reverse ps) (reverse qs)
 	match (Phoneme x m) (Phoneme y n) = if x == y
