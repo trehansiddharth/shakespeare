@@ -1,8 +1,12 @@
-{-# LANGUAGE DatatypeContexts #-}
+{-# LANGUAGE DatatypeContexts, OverloadedStrings #-}
 
 module Pipes.Http where
 	import Network
 	import Network.HTTP hiding (GET, POST, Request)
+	import Network.Socket.Internal (PortNumber (PortNum))
+	import Network.HTTP.Server
+	import Network.HTTP.Server.Logger
+	import Network.HTTP.Base
 	import System.IO.Strict (hGetContents)
 	import System.IO hiding (hGetContents)
 	import Control.Monad
@@ -10,24 +14,17 @@ module Pipes.Http where
 	import qualified Data.ByteString as BS
 	import qualified Data.ByteString.Internal as BS (c2w, w2c)
 
-	data (Eq a, Show a, Read a) => Request a = GET String | POST String a
-		deriving (Eq, Show, Read)
+	--bind :: PortNumber -> IO (Pipe (Pipe (Request BS.ByteString) BS.ByteString) a)
+	bind site = spawn (bindSocket (PortNum site)) >>= return . invert
 
-	getUrl (GET u) = u
-	getUrl (POST u l) = u
-
-	bind :: PortNumber -> IO (Pipe (Pipe (Request BS.ByteString) BS.ByteString) a)
-	bind site = spawn (bindSocket (PortNumber site)) >>= return . invert
-
-	bindSocket site pipe = do
-		sock <- listenOn site
-		withSocketsDo . forever $ do
-			(h, hostname, portnumber) <- accept sock
-			hSetBuffering h NoBuffering
-			ps <- spawn (portHandler h)
-			push pipe (invert ps)
+	bindSocket site pipe = withSocketsDo . serverWith (Config stdLogger "localhost" site) $ \sockAddr url req -> do
+		p <- construct
+		push p req
+		push pipe (invert p)
+		msg <- pull p
+		return . insertHeader HdrContentLength (show . BS.length $ msg) . Response (2, 0, 0) "" [] $ msg
 	
-	portHandler h pipe = do
+	{--portHandler h pipe = do
 		top <- hGetLine h >>= return . words
 		let protocol = head top
 		let url = (!! 1) $ top
@@ -49,7 +46,7 @@ module Pipes.Http where
 					else if head params == "Content-Length:"
 						then getData (read (params !! 1)) h
 						else getData i h
-		return d2
+		return d2--}
 	
 	write_msg msg = concat [bare_headers, "\r\nContent-Length: ", (show . length) msg, "\r\n\r\n", msg, "\r\n"]
 	

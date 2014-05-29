@@ -1,6 +1,6 @@
 module Server where
-	import Network
-	import Network.HTTP hiding (GET, POST)
+	import Network.HTTP.Server --(rqMethod, rqBody, RequestMethod (GET, POST))
+	import Network.URI
 	import System.IO
 	import Control.Monad
 	import Shakespeare
@@ -20,13 +20,15 @@ module Server where
 	handleRequests bst pClients = do
 		pipe <- pull pClients
 		request <- pull pipe
-		forkIO $ case request of
-			GET url -> do
+		forkIO $ case rqMethod request of
+			GET -> do
+				let url = (uriPath . rqURI) request
 				content <- BS.readFile $ case url of
 					"/" -> "build/Elm/shakespeare.html"
 					u -> "static/" ++ (getFilename u)
 				push pipe content
-			POST url corpus -> do
+			POST -> do
+				let corpus = rqBody request
 				poem <- runShakespeare (Right bst) corpus 2 8
 				push pipe poem
 		return ()
